@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HNG Stage 0 — Todo Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #181c27;
+      --surface-2: #1e2436;
+      --border: #2a3045;
+      --text: #e8eaf0;
+      --text-muted: #7c85a0;
+      --text-dim: #4a5270;
+      --accent: #6c8aff;
+      --accent-glow: rgba(108, 138, 255, 0.18);
+      --high: #ff6b6b;
+      --high-bg: rgba(255, 107, 107, 0.12);
+      --med: #ffc947;
+      --med-bg: rgba(255, 201, 71, 0.12);
+      --low: #43e08b;
+      --low-bg: rgba(67, 224, 139, 0.12);
+      --done: #43e08b;
+      --done-bg: rgba(67, 224, 139, 0.12);
+      --progress: #6c8aff;
+      --progress-bg: rgba(108, 138, 255, 0.12);
+      --pending: #ffc947;
+      --pending-bg: rgba(255, 201, 71, 0.12);
+      --radius: 20px;
+      --radius-sm: 10px;
+      --font: 'DM Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 20% 10%, rgba(108,138,255,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 90%, rgba(67,224,139,0.05) 0%, transparent 60%);
+    }
+
+    /* ── Card ── */
+    article.todo-card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03),
+        0 20px 50px rgba(0,0,0,0.4),
+        0 2px 8px rgba(0,0,0,0.3);
+      overflow-wrap: break-word;
+      transition: opacity 0.3s;
+    }
+
+    article.todo-card.completed {
+      opacity: 0.72;
+    }
+
+    /* ── Top row ── */
+    .card-top {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Title ── */
+    h2.todo-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text);
+      transition: color 0.3s, text-decoration 0.3s;
+      letter-spacing: -0.02em;
+    }
+
+    article.completed h2.todo-title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    /* ── Description ── */
+    p.todo-description {
+      margin-top: 8px;
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+
+    article.completed p.todo-description {
+      color: var(--text-dim);
+    }
+
+    /* ── Badges row ── */
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Priority */
+    .priority-high  { background: var(--high-bg);    color: var(--high); }
+    .priority-high .badge-dot  { background: var(--high); }
+    .priority-medium{ background: var(--med-bg);     color: var(--med); }
+    .priority-medium .badge-dot{ background: var(--med); }
+    .priority-low   { background: var(--low-bg);     color: var(--low); }
+    .priority-low .badge-dot   { background: var(--low); }
+
+    /* Status */
+    .status-in-progress { background: var(--progress-bg); color: var(--progress); }
+    .status-in-progress .badge-dot { background: var(--progress); animation: pulse 2s infinite; }
+    .status-done        { background: var(--done-bg);     color: var(--done); }
+    .status-done .badge-dot { background: var(--done); }
+    .status-pending     { background: var(--pending-bg);  color: var(--pending); }
+    .status-pending .badge-dot { background: var(--pending); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ── Time block ── */
+    .time-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    time.todo-due-date {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    time.todo-due-date::before {
+      content: '📅 ';
+    }
+
+    time.todo-time-remaining {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+
+    /* ── Checkbox row ── */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .checkbox-row:hover {
+      border-color: var(--accent);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .checkbox-row input[type="checkbox"]:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .checkbox-row label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* ── Tags ── */
+    ul.todo-tags {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    ul.todo-tags li {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
+    }
+
+    ul.todo-tags li::before {
+      content: '#';
+      color: var(--accent);
+      margin-right: 2px;
+    }
+
+    /* ── Actions ── */
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      flex: 1;
+      min-width: 100px;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    }
+
+    .actions button:active {
+      transform: scale(0.97);
+    }
+
+    .actions button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    #edit-btn {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(108,138,255,0.25);
+    }
+
+    #edit-btn:hover {
+      opacity: 0.88;
+    }
+
+    #delete-btn {
+      background: var(--high-bg);
+      color: var(--high);
+      border: 1px solid rgba(255,107,107,0.25);
+    }
+
+    #delete-btn:hover {
+      background: rgba(255,107,107,0.22);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      article.todo-card {
+        padding: 20px;
+      }
+
+      h2.todo-title {
+        font-size: 1.1rem;
+      }
+    }
+
+    @media (min-width: 768px) {
+      article.todo-card {
+        padding: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <article
+    class="todo-card"
+    data-testid="test-todo-card"
+    aria-labelledby="todo-title"
+  >
+    <!-- Top -->
+    <div class="card-top">
+      <div>
+        <h2 id="todo-title" class="todo-title" data-testid="test-todo-title">
+          Finish HNG Stage 0 Todo Card
+        </h2>
+        <p class="todo-description" data-testid="test-todo-description">
+          Build a clean, accessible, and responsive task card component with all
+          required data-testid attributes for automated testing.
+        </p>
+      </div>
+
+      <div class="badges">
+        <span
+          class="badge priority-high"
+          data-testid="test-todo-priority"
+          aria-label="Priority: High"
+        >
+          <span class="badge-dot" aria-hidden="true"></span>
+          High
+        </span>
+
+        <span
+          id="status-badge"
+          class="badge status-in-progress"
+          data-testid="test-todo-status"
+          aria-label="Status: In Progress"
+        >
+          <span class="badge-dot" aria-hidden="true"></span>
+          <span id="status-text">In Progress</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="divider" role="separator"></div>
+
+    <!-- Time -->
+    <div class="time-block">
+      <time
+        id="due-date-el"
+        class="todo-due-date"
+        data-testid="test-todo-due-date"
+      ></time>
+
+      <time
+        id="time-remaining-el"
+        class="todo-time-remaining"
+        data-testid="test-todo-time-remaining"
+        aria-live="polite"
+      ></time>
+    </div>
+
+    <div class="divider" role="separator"></div>
+
+    <!-- Checkbox -->
+    <div class="checkbox-row">
+      <input
+        type="checkbox"
+        id="complete-task"
+        data-testid="test-todo-complete-toggle"
+        aria-label="Mark task as complete"
+      />
+      <label for="complete-task">Mark as complete</label>
+    </div>
+
+    <div class="divider" role="separator"></div>
+
+    <!-- Tags -->
+    <ul class="todo-tags" data-testid="test-todo-tags" role="list" aria-label="Task tags">
+      <li data-testid="test-todo-tag-work">work</li>
+      <li data-testid="test-todo-tag-urgent">urgent</li>
+      <li>design</li>
+    </ul>
+
+    <div class="divider" role="separator"></div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button
+        id="edit-btn"
+        type="button"
+        data-testid="test-todo-edit-button"
+        aria-label="Edit task"
+      >
+        ✏️ Edit
+      </button>
+      <button
+        id="delete-btn"
+        type="button"
+        data-testid="test-todo-delete-button"
+        aria-label="Delete task"
+      >
+        🗑️ Delete
+      </button>
+    </div>
+  </article>
+
+  <script>
+    // ── Due date: 3 days + 2 hours from now ──
+    const dueDate = new Date(Date.now() + (3 * 24 + 2) * 60 * 60 * 1000);
+
+    function formatDueDate(date) {
+      return 'Due ' + new Intl.DateTimeFormat('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      }).format(date);
+    }
+
+    function getTimeRemaining(target) {
+      const diffMs = target.getTime() - Date.now();
+      const abs    = Math.abs(diffMs);
+      const mins   = Math.floor(abs / 60000);
+      const hrs    = Math.floor(abs / 3600000);
+      const days   = Math.floor(abs / 86400000);
+
+      if (abs < 60000)     return 'Due now!';
+      if (diffMs > 0) {
+        if (days >= 2)     return `Due in ${days} days`;
+        if (days === 1)    return 'Due tomorrow';
+        if (hrs >= 1)      return `Due in ${hrs} hour${hrs > 1 ? 's' : ''}`;
+        return             `Due in ${mins} minute${mins !== 1 ? 's' : ''}`;
+      }
+      if (days >= 1)       return `Overdue by ${days} day${days > 1 ? 's' : ''}`;
+      if (hrs >= 1)        return `Overdue by ${hrs} hour${hrs > 1 ? 's' : ''}`;
+      return               `Overdue by ${mins} minute${mins !== 1 ? 's' : ''}`;
+    }
+
+    // Set initial values
+    const dueDateEl      = document.getElementById('due-date-el');
+    const timeRemainingEl = document.getElementById('time-remaining-el');
+
+    dueDateEl.textContent      = formatDueDate(dueDate);
+    dueDateEl.setAttribute('datetime', dueDate.toISOString());
+    timeRemainingEl.textContent = getTimeRemaining(dueDate);
+    timeRemainingEl.setAttribute('datetime', dueDate.toISOString());
+
+    // Refresh every 30s
+    setInterval(() => {
+      timeRemainingEl.textContent = getTimeRemaining(dueDate);
+    }, 30000);
+
+    // ── Checkbox toggle ──
+    const checkbox    = document.getElementById('complete-task');
+    const card        = document.querySelector('[data-testid="test-todo-card"]');
+    const statusBadge = document.getElementById('status-badge');
+    const statusText  = document.getElementById('status-text');
+
+    checkbox.addEventListener('change', () => {
+      const done = checkbox.checked;
+
+      card.classList.toggle('completed', done);
+
+      if (done) {
+        statusBadge.className   = 'badge status-done';
+        statusBadge.setAttribute('aria-label', 'Status: Done');
+        statusText.textContent  = 'Done';
+      } else {
+        statusBadge.className   = 'badge status-in-progress';
+        statusBadge.setAttribute('aria-label', 'Status: In Progress');
+        statusText.textContent  = 'In Progress';
+      }
+    });
+
+    // ── Buttons ──
+    document.getElementById('edit-btn').addEventListener('click', () => {
+      console.log('edit clicked');
+    });
+
+    document.getElementById('delete-btn').addEventListener('click', () => {
+      alert('Delete clicked');
+    });
+  </script>
+</body>
+</html>
