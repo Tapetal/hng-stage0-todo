@@ -4,18 +4,17 @@ A responsive, accessible, and testable Todo Card built with HTML, CSS, and JavaS
 
 ## Live URL
 
-[Add your deployed link here]
 
 ## GitHub Repository
 
-[Add your GitHub repo link here]
+https://github.com/Tapetal/hng-stage0-todo
 
 ## How to Run Locally
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/hng-stage0-todo.git
+git clone https://github.com/Tapetal/hng-stage0-todo.git
 ```
 
 2. Open the project folder:
