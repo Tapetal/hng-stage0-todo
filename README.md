@@ -4,6 +4,7 @@ A responsive, accessible, and testable Todo Card built with HTML, CSS, and JavaS
 
 ## Live URL
 
+https://tapetal.github.io/hng-stage0-todo/
 
 ## GitHub Repository
 
